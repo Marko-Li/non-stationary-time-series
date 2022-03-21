@@ -1,0 +1,103 @@
+##Possible proposals:
+
+I would like to classify the method of generating non-stationary time series by two kinds.
+
+Non-stationary series
+
+random walk and exploding series: can't make stationary
+
+integrated series (ARIMA(d, p, q) where p > 0): difference by lag p (if p = 1, first difference, 2, second difference...)
+
+non-stationary time series convertible to stationary (eg. unit-root random walk)
+
+non-stationary time series not convertible to stationary
+
+After generating the non-stationary process, it is essential to do ADF test() to see stationarity or not from p-value in the model.
+
+
+from statsmodels.tsa.stattools import adfuller
+result = adfuller(df, autolag='AIC')
+print(f'ADF Statistic: {result[0]}')
+print(f'n_lags: {result[1]}')
+print(f'p-value: {result[1]}')
+for key, value in result[4].items():
+    print('Critial Values:')
+    print(f'   {key}, {value}')
+
+
+
+Proposal 1:
+
+AR(1) Yt = Yt-1 + δ + ε
+
+δ: represents drift/trend
+
+ε: represents noise
+
+Theorem related:
+
+As mentioned in some books about Analysis of Financial Time Series (Ruey S. Tsay, 2001) 
+
+Stock Price: The 1st differenced series of log() in stock price is stationary ---log-normal distribution
+
+Generating process:
+
+Generate a AR(1) random_walk time series and then take exponential to get a non-stationary time series
+
+
+import numpy as np
+import math
+import pandas as pd
+import random
+random.seed(20)
+steps = 364
+rho = 1.0
+## rho = 1.0 represents for unit-root AR(1) model 
+## shift = (random.rand(1)-0.5)/100 
+## discussion: Is it okay to estimate drift or trend following N(0,1/10000)
+## e follows a normal distribution with mean 0 and possible maximum 0.01 which is suitable for stock market
+e = (np.random.rand(steps)-0.5)/np.random.randint(100,1000)
+y = [0]
+## AR(1) model formula is Yt = rho * Yt-1 + shift + random_walk 
+## Time series starts from y1 = 0
+## e represents for epislon: random walk
+## shift represents the whole trend/shift in AR(1) model
+
+
+for i in range(len(e)):
+    y.append(rho*y[i] + e[i])
+    
+N = 365
+rng = pd.date_range('2019-01-01', freq='D', periods=N)
+df = pd.DataFrame(np.random.randint(50,100)*np.exp(y), columns=['Stock 1'], index=rng)
+## Here we assume that the start of stock price at time 0 varies from a random number 50-100
+
+
+
+
+then df is the non-stationary time series to do further analysis
+
+Advantage:
+
+As mentioned in some books about Analysis of Financial Time Series (Ruey S. Tsay, 2001) 
+
+Stock Price: The 1st differenced series of log() in stock price is stationary ---log-normal distribution
+
+Drawback/Limitation:
+
+1.Only AR(1) is used in this generating process:
+
+Can’t solve double/triple unit roots
+
+2. directly take exponential, the data looks not similar with the real case in stock price
+
+3.Can’t separate from weekends and business days
+
+Proposal 2:(To be finished)
+
+Generating a random stationary time series, and do data processing to change stationary to non-stationary
+
+Proposal 3:(To be finished)
+
+Directly generate random non-stationary time series which is not convertible to stationary 
+ 

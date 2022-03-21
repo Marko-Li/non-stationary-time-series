@@ -1,0 +1,44 @@
+## generate non-stationary time series based on AR(1) model
+
+import numpy as np
+import math
+import pandas as pd
+import random
+random.seed(20)
+steps = 364
+rho = 1.0
+## rho = 1.0 represents for unit-root AR(1) model 
+## shift = (random.rand(1)-0.5)/100 
+## discussion: Is it okay to estimate drift or trend following N(0,1/10000)
+## e follows a normal distribution with mean 0 and possible maximum 0.01 which is suitable for stock market
+e = (np.random.rand(steps)-0.5)/np.random.randint(100,1000)
+y = [0]
+## AR(1) model formula is Yt = rho * Yt-1 + shift + random_walk 
+## Time series starts from y1 = 0
+## e represents for epislon: random walk
+## shift represents the whole trend/shift in AR(1) model
+
+
+for i in range(len(e)):
+    y.append(rho*y[i] + e[i])
+    
+N = 365
+rng = pd.date_range('2019-01-01', freq='D', periods=N)
+df = pd.DataFrame(np.random.randint(50,100)*np.exp(y), columns=['Stock 1'], index=rng)
+## Here we assume that the start of stock price at time 0 varies from a random number 50-100
+
+
+
+
+
+
+## do ADF(adfuller) test to verify non-stationarity
+
+from statsmodels.tsa.stattools import adfuller
+result = adfuller(df, autolag='AIC')
+print(f'ADF Statistic: {result[0]}')
+print(f'n_lags: {result[1]}')
+print(f'p-value: {result[1]}')
+for key, value in result[4].items():
+    print('Critial Values:')
+    print(f'   {key}, {value}')
